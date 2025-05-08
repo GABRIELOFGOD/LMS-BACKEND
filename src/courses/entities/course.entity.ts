@@ -9,13 +9,13 @@ export class Course {
   @Column()
   title: string;
 
-  @Column({ nullable: true })
+  @Column({ default: "", type: "text" })
   description: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: 0.00 })
   price: number;
 
-  @Column({ nullable: true })
+  @Column({ default: "", type: "text" })
   imageUrl: string;
 
   @Column({ type: "boolean", default: true })

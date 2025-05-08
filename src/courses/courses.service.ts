@@ -1,9 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, Repository } from 'typeorm';
+import { imageUpload } from 'src/core/utils';
 
 @Injectable()
 export class CoursesService {
@@ -76,7 +77,56 @@ export class CoursesService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} course`;
+  async updateOtherPartOfCourse(id: number, updateOtherCourseDto: UpdateOtherCourseDto) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      await this.courseRepository.update(course.id, updateOtherCourseDto);
+
+      return { message: "Course updated successfully" }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateCourseImage(id: number, updateCourseImageDto: UpdateCourseImageDto) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      const uploadedImage = await imageUpload(updateCourseImageDto.imageUrl);
+
+      const newCourse = await this.courseRepository.update(course.id, {
+        imageUrl: uploadedImage
+      });
+
+      console.log("new Course with image", newCourse);
+      return { message: "Course image updated successfully." }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async remove(id: number) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      await this.courseRepository.delete(course.id);
+
+      return { message: "Course deleted successfully" }
+    } catch (error) {
+      throw error;
+    }
   }
 }
