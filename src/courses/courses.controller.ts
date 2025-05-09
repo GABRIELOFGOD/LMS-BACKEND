@@ -42,21 +42,6 @@ export class CoursesController {
     const uploadedImage = await this.uploadService.uploadImage(file);
     return this.coursesService.updateCourseImage(+id, uploadedImage.secure_url);
   }
-  
-  
-  // @Put('upload/:id')
-  // @UseInterceptors(FileInterceptor('file'))
-  // async uploadFileAndValidate(@Param('id') id: string, @UploadedFile(
-  //   new ParseFilePipe({
-  //     validators: [
-  //       new MaxFileSizeValidator({ maxSize: 1000 }),
-  //     ],
-  //   }),
-  // )
-  // file: UpdateCourseImageDto,) {
-  //   const uploadedImage = await imageUpload(file);
-  //   return this.coursesService.updateCourseImage(+id, uploadedImage);
-  // }
 
   @Put(':id')
   updateOthers(@Param('id') id: string, @Body() updateOtherCourseDto: UpdateOtherCourseDto) {

@@ -1,12 +1,17 @@
-// upload.service.ts
-import { Inject, Injectable } from '@nestjs/common';
-import { v2 as CloudinaryType } from 'cloudinary';
+
+const uploadImage = async (file: Express.Multer.File) => {
+  return await cloudinary.uploader.upload(file.path);
+}
+// cloudinary.provider.ts
+import { v2 as cloudinary } from 'cloudinary';
+import { ConfigService } from '@nestjs/config';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class UploadService {
-  constructor(@Inject('CLOUDINARY') private cloudinary: typeof CloudinaryType) {}
-
-  async uploadImage(file: Express.Multer.File) {
-    return await this.cloudinary.uploader.upload(file.path);
+export class cloudinaryService {
+  constructor() {
+    cloudinary.config({
+      cloud_name: ""
+    });
   }
-}
+}; 
