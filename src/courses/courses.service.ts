@@ -4,7 +4,6 @@ import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './d
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, Repository } from 'typeorm';
-import { imageUpload } from 'src/core/utils';
 
 @Injectable()
 export class CoursesService {
@@ -93,7 +92,7 @@ export class CoursesService {
     }
   }
 
-  async updateCourseImage(id: number, updateCourseImageDto: UpdateCourseImageDto) {
+  async updateCourseImage(id: number, updateCourseImageDto: string) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }
@@ -101,10 +100,10 @@ export class CoursesService {
 
       if (!course) throw new NotFoundException("Course not found, please refresh");
 
-      const uploadedImage = await imageUpload(updateCourseImageDto.imageUrl);
+      // const uploadedImage = await imageUpload(updateCourseImageDto.imageUrl);
 
       const newCourse = await this.courseRepository.update(course.id, {
-        imageUrl: uploadedImage
+        imageUrl: updateCourseImageDto
       });
 
       console.log("new Course with image", newCourse);

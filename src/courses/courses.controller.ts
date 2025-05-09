@@ -4,10 +4,14 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileSizeValidationPipe } from 'src/core/validators/file.validator';
+import { UploadService } from 'src/core/utils';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   @Post()
   create(@Body() createCourseDto: CreateCourseDto) {
@@ -33,17 +37,26 @@ export class CoursesController {
   
   @Put('upload/:id')
   @UseInterceptors(FileInterceptor('file'))
-  uploadFileAndValidate(@Param('id') id: string, @UploadedFile(
-    new FileSizeValidationPipe(),
-    new ParseFilePipe({
-      validators: [
-        new MaxFileSizeValidator({ maxSize: 1000 }),
-      ],
-    }),
-  )
-  file: UpdateCourseImageDto,) {
-    return this.coursesService.updateCourseImage(+id, file);
+  async uploadFileAndValidate(@Param('id') id: string, @Body()
+  file: Express.Multer.File,) {
+    const uploadedImage = await this.uploadService.uploadImage(file);
+    return this.coursesService.updateCourseImage(+id, uploadedImage.secure_url);
   }
+  
+  
+  // @Put('upload/:id')
+  // @UseInterceptors(FileInterceptor('file'))
+  // async uploadFileAndValidate(@Param('id') id: string, @UploadedFile(
+  //   new ParseFilePipe({
+  //     validators: [
+  //       new MaxFileSizeValidator({ maxSize: 1000 }),
+  //     ],
+  //   }),
+  // )
+  // file: UpdateCourseImageDto,) {
+  //   const uploadedImage = await imageUpload(file);
+  //   return this.coursesService.updateCourseImage(+id, uploadedImage);
+  // }
 
   @Put(':id')
   updateOthers(@Param('id') id: string, @Body() updateOtherCourseDto: UpdateOtherCourseDto) {

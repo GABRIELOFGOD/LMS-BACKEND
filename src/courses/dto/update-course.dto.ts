@@ -12,5 +12,5 @@ export class UpdateOtherCourseDto {
 
 export class UpdateCourseImageDto {
   @IsNotEmpty()
-  imageUrl: Express.Multer.File;
+  imageUrl: string;
 }
