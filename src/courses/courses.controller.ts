@@ -1,16 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UploadedFile, UseInterceptors, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { FileSizeValidationPipe } from 'src/core/validators/file.validator';
-import { UploadService } from 'src/core/utils';
+import { diskStorage } from 'multer';
 
 @Controller('courses')
 export class CoursesController {
   constructor(
     private readonly coursesService: CoursesService,
-    private readonly uploadService: UploadService,
   ) {}
 
   @Post()
@@ -36,11 +34,19 @@ export class CoursesController {
   
   
   @Put('upload/:id')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadFileAndValidate(@Param('id') id: string, @Body()
-  file: Express.Multer.File,) {
-    const uploadedImage = await this.uploadService.uploadImage(file);
-    return this.coursesService.updateCourseImage(+id, uploadedImage.secure_url);
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      filename: (_, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+  }))
+  async uploadFileAndValidate(
+    @Param('id') id: string,
+    @UploadedFile() updateCourseImageDto: UpdateCourseImageDto
+  ) {
+    return this.coursesService.updateCourseImage(+id, updateCourseImageDto);
   }
 
   @Put(':id')

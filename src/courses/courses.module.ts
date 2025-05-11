@@ -5,10 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { Chapters } from './entities/chapter.entity';
 import { Video } from './entities/video.entity';
+import { CloudinaryService } from 'src/core/config/cloudinary.config';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Course, Chapters, Video])],
   controllers: [CoursesController],
-  providers: [CoursesService],
+  providers: [CoursesService, CloudinaryService],
 })
 export class CoursesModule {}

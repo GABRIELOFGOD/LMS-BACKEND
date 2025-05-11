@@ -1,9 +1,10 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto, UpdateOtherCourseDto } from './dto/update-course.dto';
+import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, Repository } from 'typeorm';
+import { CloudinaryService } from 'src/core/config/cloudinary.config';
 
 @Injectable()
 export class CoursesService {
@@ -11,6 +12,7 @@ export class CoursesService {
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
     private readonly dataSource: DataSource,
+    private readonly cloudinarySe: CloudinaryService
   ){}
   
   async create(createCourseDto: CreateCourseDto) {
@@ -23,7 +25,7 @@ export class CoursesService {
         where: {title: createCourseDto.title}
       });
 
-      if (courseExists) throw new ConflictException("Course title exists, can you please pick another title. Thanh you");
+      if (courseExists) throw new ConflictException("Course title exists, can you please pick another title. Thank you");
       
       const course = this.courseRepository.create(createCourseDto);
       await queryRunner.manager.save(course);
@@ -92,7 +94,7 @@ export class CoursesService {
     }
   }
 
-  async updateCourseImage(id: number, updateCourseImageDto: string) {
+  async updateCourseImage(id: number, updateCourseImageDto: UpdateCourseImageDto) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }
@@ -100,10 +102,10 @@ export class CoursesService {
 
       if (!course) throw new NotFoundException("Course not found, please refresh");
 
-      // const uploadedImage = await imageUpload(updateCourseImageDto.imageUrl);
+      const uploadedImage = await this.cloudinarySe.uploadImage(updateCourseImageDto);
 
       const newCourse = await this.courseRepository.update(course.id, {
-        imageUrl: updateCourseImageDto
+        imageUrl: uploadedImage
       });
 
       console.log("new Course with image", newCourse);
