@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
+import { UpdateCourseCategoryDto, UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 
@@ -31,7 +31,10 @@ export class CoursesController {
     return this.coursesService.update(+id, updateCourseDto);
   }
 
-  
+  @Put('add-category/:id')
+  addCategory(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseCategoryDto) {
+    return this.coursesService.addCategory(+id, updateCourseDto);
+  }
   
   @Put('upload/:id')
   @UseInterceptors(FileInterceptor('file', {

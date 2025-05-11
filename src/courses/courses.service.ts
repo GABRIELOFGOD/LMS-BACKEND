@@ -1,16 +1,20 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
+import { UpdateCourseCategoryDto, UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CloudinaryService } from 'src/core/config/cloudinary.config';
+import { Category } from 'src/categories/entities/category.entity';
 
 @Injectable()
 export class CoursesService {
   constructor(
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
+
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
     private readonly dataSource: DataSource,
     private readonly cloudinarySe: CloudinaryService
   ){}
@@ -51,7 +55,8 @@ export class CoursesService {
   async findOne(id: number) {
     try {
       const course = await this.courseRepository.findOne({
-        where: {id}
+        where: {id},
+        relations: ["category"]
       });
 
       if (!course) throw new NotFoundException("Course not found");
@@ -110,6 +115,30 @@ export class CoursesService {
 
       console.log("new Course with image", newCourse);
       return { message: "Course image updated successfully." }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addCategory(id: number, updateCourseDto: UpdateCourseCategoryDto) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      const category = await this.categoryRepository.findOne({
+        where: { name: updateCourseDto.category }
+      });
+
+      if (!category) throw new NotFoundException("Category not found, please refresh");
+
+      await this.courseRepository.update(course.id, {
+        category
+      });
+
+      return { message: "Course category updated successfully" }
     } catch (error) {
       throw error;
     }

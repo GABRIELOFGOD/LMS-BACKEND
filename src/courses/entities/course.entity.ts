@@ -1,5 +1,6 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Chapters } from "./chapter.entity";
+import { Category } from "src/categories/entities/category.entity";
 
 @Entity({ name: "courses" })
 export class Course {
@@ -26,6 +27,9 @@ export class Course {
 
   @OneToMany(() => Chapters, (chapter) => chapter.course)
   chapters: Chapters[];
+
+  @ManyToOne(() => Category, (category) => category.courses)
+  category: Category;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;

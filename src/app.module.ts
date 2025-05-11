@@ -7,6 +7,8 @@ import { ConfigService, ConfigModule } from "@nestjs/config";
 import { Course } from './courses/entities/course.entity';
 import { Chapters } from './courses/entities/chapter.entity';
 import { Video } from './courses/entities/video.entity';
+import { CategoriesModule } from './categories/categories.module';
+import { Category } from './categories/entities/category.entity';
 
 @Module({
   imports: [
@@ -22,10 +24,11 @@ import { Video } from './courses/entities/video.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [Course, Chapters, Video],
+        entities: [Course, Chapters, Video, Category],
         synchronize: true, // ⚠️ Set to false in production!
       }),
-    })
+    }),
+    CategoriesModule
   ],
   controllers: [AppController],
   providers: [AppService],
