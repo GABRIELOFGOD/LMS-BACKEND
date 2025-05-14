@@ -1,11 +1,12 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseCategoryDto, UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CloudinaryService } from 'src/core/config/cloudinary.config';
 import { Category } from 'src/categories/entities/category.entity';
+import { Attachment } from './entities/attachment.entity';
 
 @Injectable()
 export class CoursesService {
@@ -15,6 +16,9 @@ export class CoursesService {
 
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+
+    @InjectRepository(Attachment)
+    private readonly attachmentRepository: Repository<Attachment>,
     private readonly dataSource: DataSource,
     private readonly cloudinarySe: CloudinaryService
   ){}
@@ -56,12 +60,28 @@ export class CoursesService {
     try {
       const course = await this.courseRepository.findOne({
         where: {id},
-        relations: ["category"]
+        relations: ["category", "attachments", "chapters", "chapters.videos"]
       });
 
       if (!course) throw new NotFoundException("Course not found");
 
       return course;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addCourseChapter(id: number, updateCourseDto: UpdateCourseDto) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      await this.courseRepository.update(course.id, updateCourseDto);
+
+      return { message: "Course updated successfully" }
     } catch (error) {
       throw error;
     }
@@ -119,6 +139,62 @@ export class CoursesService {
       throw error;
     }
   }
+
+  async attachmentUpload(
+    file: any,
+    course: Course,
+    queryRunner: QueryRunner
+  ) {
+    try {
+      const uploadedImage = await this.cloudinarySe.uploadImage(file);
+  
+      const attachment = this.attachmentRepository.create({
+        url: uploadedImage,
+        course,
+        originalName: file.originalname
+      });
+  
+      // Save via queryRunner's manager to respect the transaction
+      return await queryRunner.manager.save(attachment);
+    } catch (error) {
+      throw new InternalServerErrorException("Failed to upload and save attachment.", error);
+    }
+  }
+  
+  async updateCourseAttachment(id: number, updateCourseImageDto: UpdateCourseImageDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+  
+    try {
+      const course = await queryRunner.manager.findOne(Course, {
+        where: { id },
+        relations: ["attachments"]
+      });
+  
+      if (!course) {
+        throw new NotFoundException("Course not found, please refresh.");
+      }
+
+      const courseAttachment = await this.attachmentUpload(updateCourseImageDto, course, queryRunner);
+  
+      // Safeguard against undefined attachments array
+      course.attachments = course.attachments ? [...course.attachments, courseAttachment] : [courseAttachment];
+  
+      await queryRunner.manager.save(course);
+  
+      await queryRunner.commitTransaction();
+  
+      return { message: "Course attachment updated successfully." };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.log("ERROR", error);
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+  
 
   async addCategory(id: number, updateCourseDto: UpdateCourseCategoryDto) {
     try {

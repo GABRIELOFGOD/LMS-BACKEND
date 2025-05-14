@@ -1,0 +1,18 @@
+import { Module } from '@nestjs/common';
+import { ChaptersService } from './chapters.service';
+import { ChaptersController } from './chapters.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Chapters } from './entities/chapter.entity';
+import { Video } from 'src/courses/entities/video.entity';
+import { Course } from 'src/courses/entities/course.entity';
+import { CoursesService } from 'src/courses/courses.service';
+import { Category } from 'src/categories/entities/category.entity';
+import { Attachment } from 'src/courses/entities/attachment.entity';
+import { CloudinaryService } from 'src/core/config/cloudinary.config';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Chapters, Video, Course, Category, Attachment])],
+  controllers: [ChaptersController],
+  providers: [ChaptersService, CoursesService, CloudinaryService],
+})
+export class ChaptersModule {}

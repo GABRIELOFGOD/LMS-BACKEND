@@ -1,16 +1,19 @@
-import { Chapters } from "src/chapters/entities/chapter.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Course } from "./course.entity";
 
-@Entity({ name: "video" })
-export class Video {
+@Entity("attachment")
+export class Attachment {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()
-  link: string;
+  originalName: string;
 
-  @ManyToOne(() => Chapters, (chapter) => chapter.videos)
-  chapter: Chapters;
+  @Column()
+  url: string;
+
+  @ManyToOne(() => Course, (course) => course.attachments, { onDelete: "CASCADE" })
+  course: Course;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;

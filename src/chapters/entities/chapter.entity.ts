@@ -1,14 +1,17 @@
+import { Course } from "src/courses/entities/course.entity";
+import { Video } from "src/courses/entities/video.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Course } from "./course.entity";
-import { Video } from "./video.entity";
 
 @Entity({ name: "chapters" })
 export class Chapters {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   name: string;
+
+  @Column({ type: "boolean", default: false })
+  isPublished: boolean;
 
   @ManyToOne(() => Course, (course) => course.chapters)
   course: Course;

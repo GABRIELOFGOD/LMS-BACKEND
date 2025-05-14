@@ -1,6 +1,7 @@
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Chapters } from "./chapter.entity";
 import { Category } from "src/categories/entities/category.entity";
+import { Attachment } from "./attachment.entity";
+import { Chapters } from "src/chapters/entities/chapter.entity";
 
 @Entity({ name: "courses" })
 export class Course {
@@ -30,6 +31,9 @@ export class Course {
 
   @ManyToOne(() => Category, (category) => category.courses)
   category: Category;
+
+  @OneToMany(() => Attachment, (attachment) => attachment.course, { cascade: true })
+  attachments: Attachment[];
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;

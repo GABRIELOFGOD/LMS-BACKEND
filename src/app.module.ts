@@ -5,10 +5,12 @@ import { CoursesModule } from './courses/courses.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService, ConfigModule } from "@nestjs/config";
 import { Course } from './courses/entities/course.entity';
-import { Chapters } from './courses/entities/chapter.entity';
 import { Video } from './courses/entities/video.entity';
 import { CategoriesModule } from './categories/categories.module';
 import { Category } from './categories/entities/category.entity';
+import { Attachment } from './courses/entities/attachment.entity';
+import { ChaptersModule } from './chapters/chapters.module';
+import { Chapters } from './chapters/entities/chapter.entity';
 
 @Module({
   imports: [
@@ -24,11 +26,12 @@ import { Category } from './categories/entities/category.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [Course, Chapters, Video, Category],
+        entities: [Course, Chapters, Video, Category, Attachment],
         synchronize: true, // ⚠️ Set to false in production!
       }),
     }),
-    CategoriesModule
+    CategoriesModule,
+    ChaptersModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -45,11 +45,27 @@ export class CoursesController {
       },
     }),
   }))
-  async uploadFileAndValidate(
+  uploadFileAndValidate(
     @Param('id') id: string,
     @UploadedFile() updateCourseImageDto: UpdateCourseImageDto
   ) {
     return this.coursesService.updateCourseImage(+id, updateCourseImageDto);
+  }
+
+  @Put('attachments/:id')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      filename: (_, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+  }))
+  uploadAttachment(
+    @Param('id') id: string,
+    @UploadedFile() updateCourseImageDto: UpdateCourseImageDto
+  ) {
+    return this.coursesService.updateCourseAttachment(+id, updateCourseImageDto);
   }
 
   @Put(':id')
