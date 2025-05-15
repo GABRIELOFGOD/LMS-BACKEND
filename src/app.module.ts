@@ -11,6 +11,10 @@ import { Category } from './categories/entities/category.entity';
 import { Attachment } from './courses/entities/attachment.entity';
 import { ChaptersModule } from './chapters/chapters.module';
 import { Chapters } from './chapters/entities/chapter.entity';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { User } from './user/entities/user.entity';
+import { EmailService } from './email/email.service';
 
 @Module({
   imports: [
@@ -26,14 +30,16 @@ import { Chapters } from './chapters/entities/chapter.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [Course, Chapters, Video, Category, Attachment],
+        entities: [Course, Chapters, Video, Category, Attachment, User],
         synchronize: true, // ⚠️ Set to false in production!
       }),
     }),
     CategoriesModule,
-    ChaptersModule
+    ChaptersModule,
+    AuthModule,
+    UserModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EmailService],
 })
 export class AppModule {}
