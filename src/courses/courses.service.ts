@@ -4,7 +4,7 @@ import { UpdateCourseCategoryDto, UpdateCourseDto, UpdateCourseImageDto, UpdateO
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
-import { CloudinaryService } from 'src/core/config/cloudinary.config';
+import { CloudinaryService } from 'src/config/cloudinary.config';
 import { Category } from 'src/categories/entities/category.entity';
 import { Attachment } from './entities/attachment.entity';
 

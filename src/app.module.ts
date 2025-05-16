@@ -15,10 +15,11 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { EmailService } from './email/email.service';
+import jwtConfig from './config/jwt.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, expandVariables: true, load: [jwtConfig] }),
     CoursesModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

@@ -8,7 +8,7 @@ import { Course } from 'src/courses/entities/course.entity';
 import { CoursesService } from 'src/courses/courses.service';
 import { Category } from 'src/categories/entities/category.entity';
 import { Attachment } from 'src/courses/entities/attachment.entity';
-import { CloudinaryService } from 'src/core/config/cloudinary.config';
+import { CloudinaryService } from 'src/config/cloudinary.config';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Chapters, Video, Course, Category, Attachment])],
