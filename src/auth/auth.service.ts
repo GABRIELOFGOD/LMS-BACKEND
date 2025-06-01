@@ -3,7 +3,7 @@ import { UserService } from 'src/user/user.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'src/types/auth.jswtPayload';
+import { AuthJwtPayload } from 'src/types/auth.jwtPayload';
 
 @Injectable()
 export class AuthService {
@@ -30,7 +30,7 @@ export class AuthService {
   }
 
   login(userId: string) {
-    const payload: JwtPayload = { sub: userId };
+    const payload: AuthJwtPayload = { sub: userId };
     return this.jwtService.sign(payload);
   }
 }

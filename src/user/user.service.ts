@@ -77,6 +77,13 @@ export class UserService {
     }
   }
 
+  async getProfile(id: string) {
+    return await this.userRepository.findOne({
+      where: { id },
+      select: ["fname", "lname", "email", "role", "id", "createdAt", "updatedAt"]
+    });
+  }
+
   findAll() {
     return `This action returns all user`;
   }
