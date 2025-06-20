@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { AuthJwtPayload } from 'src/types/auth.jwtPayload';
+import { ResgistrationDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,8 +12,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
   
-  async create(createAuthDto: CreateUserDto) {
-    return `This action adds a new auth`;
+  async create(createAuthDto: ResgistrationDto) {
+    return {
+      message: `This action adds a new auth`
+    };
   }
 
   async validateUser(email: string, password: string) {
