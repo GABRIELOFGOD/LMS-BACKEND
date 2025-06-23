@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { OtpDto } from './dto/otp.dto';
+import { UserRole } from 'src/types/user';
 
 @Injectable()
 export class UserService {
@@ -80,16 +81,37 @@ export class UserService {
   async getProfile(id: string) {
     return await this.userRepository.findOne({
       where: { id },
-      select: ["fname", "lname", "email", "role", "id", "createdAt", "updatedAt"]
+      select: ["fname", "lname", "email", "role", "address", "bio", "id", "createdAt", "updatedAt"]
     });
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll() {
+    return await this.userRepository.find({
+      select: [
+        "id",
+        "fname",
+        "lname",
+        "email",
+        "role",
+        "address",
+        "bio",
+        "createdAt",
+        "updatedAt"
+      ]
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id }
+      });
+
+      if (!user) throw new NotFoundException("User not found");
+      return user;
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findByEmail(email: string) {
@@ -103,8 +125,18 @@ export class UserService {
     }
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update(id: string, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
+  }
+
+  async updateRole(id: string, role: UserRole) {
+    const user = await this.findOne(id);
+    user.role = role;
+
+    await this.userRepository.save(user);
+    return {
+      message: "Users role updated successfully!"
+    }
   }
 
   remove(id: number) {

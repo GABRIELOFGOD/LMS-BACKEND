@@ -1,7 +1,7 @@
 // roles.guard.ts
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ROLES_KEY } from '../../../core/decoratoros/roles.decorator';
+import { ROLES_KEY } from 'src/core/decoratoros/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -12,13 +12,27 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+        
     if (!requiredRoles) {
-      return true; // No roles required
+      return true;
     }
 
     const { user } = context.switchToHttp().getRequest();
-    console.log("[ROLE GUARD]: ", user);
-    return requiredRoles.some((role) => user.roles?.includes(role));
+
+    if (!user) {
+      throw new ForbiddenException('User not found in request');
+    }
+
+    if (!user.role) {
+      throw new ForbiddenException('User has no roles assigned');
+    }
+
+    const hasRole = requiredRoles.some((role) => user.role?.includes(role));
+
+    if (!hasRole) {
+      throw new ForbiddenException(`Sorry you are not allowed to perform this operation`);
+    }
+
+    return hasRole;
   }
 }
