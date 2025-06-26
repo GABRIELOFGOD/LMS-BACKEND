@@ -48,7 +48,7 @@ export class UserService {
     user.otp = null;
     user.otpExpires = null;
     await this.userRepository.save(user);
-    return { message: 'User verified successfully' };
+    return { message: 'User verified successfully', success: true };
 
   }
   
@@ -72,7 +72,11 @@ export class UserService {
         otpExpires,
         ...userWithoutPassword
       } = savedUser;
-      return userWithoutPassword;
+      return {
+        message: "Users created successfully",
+        success: true,
+        data: userWithoutPassword
+      };
     } catch (error) {
       throw error;
     }

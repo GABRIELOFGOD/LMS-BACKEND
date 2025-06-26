@@ -1,12 +1,11 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
-import { Category } from "src/categories/entities/category.entity";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Attachment } from "./attachment.entity";
 import { Chapters } from "src/chapters/entities/chapter.entity";
 
 @Entity({ name: "courses" })
 export class Course {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column()
   title: string;
@@ -29,8 +28,8 @@ export class Course {
   @OneToMany(() => Chapters, (chapter) => chapter.course)
   chapters: Chapters[];
 
-  @ManyToOne(() => Category, (category) => category.courses)
-  category: Category;
+  // @ManyToOne(() => Category, (category) => category.courses)
+  // category: Category;
 
   @OneToMany(() => Attachment, (attachment) => attachment.course, { cascade: true })
   attachments: Attachment[];

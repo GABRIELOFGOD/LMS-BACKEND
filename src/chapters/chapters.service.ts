@@ -22,7 +22,7 @@ export class ChaptersService {
   async create(createChapterDto: CreateChapterDto) {
     try {
       const course = await this.courseRepository.findOne({
-        where: { id: Number(createChapterDto.courseId) },
+        where: { id: createChapterDto.courseId },
         relations: ['chapters', 'chapters.videos'],
       });
 

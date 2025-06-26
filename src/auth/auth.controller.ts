@@ -5,15 +5,21 @@ import {
   HttpCode,
   HttpStatus,
   Request,
+  Body,
   // Body,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { UserService } from 'src/user/user.service';
 // import { ResgistrationDto } from './dto/register.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
@@ -27,8 +33,8 @@ export class AuthController {
     };
   }
 
-  // @Post('register')
-  // async create(@Body() registrationDto: ResgistrationDto) {
-  //   return this.authService.create(registrationDto);
-  // }
+  @Post('register')
+  async create(@Body() registrationDto: CreateUserDto) {
+    return this.userService.create(registrationDto);
+  }
 }

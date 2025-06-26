@@ -43,7 +43,7 @@ export class User {
   @Column({ default: false })
   isBlocked: boolean;
 
-  @Column({ default: false })
+  // @Column({ default: false })
 
   @Column({ type: "enum", enum: UserRole, default: UserRole.STUDENT })
   role: UserRole;

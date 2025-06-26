@@ -1,11 +1,10 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseCategoryDto, UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
+import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CloudinaryService } from 'src/config/cloudinary.config';
-import { Category } from 'src/categories/entities/category.entity';
 import { Attachment } from './entities/attachment.entity';
 
 @Injectable()
@@ -13,9 +12,6 @@ export class CoursesService {
   constructor(
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,
-
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>,
 
     @InjectRepository(Attachment)
     private readonly attachmentRepository: Repository<Attachment>,
@@ -48,15 +44,26 @@ export class CoursesService {
     }
   }
 
-  findAll() {
+  async findAll() {
     try {
-      return this.courseRepository.find();
+      return await this.courseRepository.find();
     } catch (error) {
       throw error;
     }
   }
 
-  async findOne(id: number) {
+  async findAllPublished() {
+    try {
+      return await this.courseRepository.find({
+        select: ["publish"],
+        where: { publish: true },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findOne(id: string) {
     try {
       const course = await this.courseRepository.findOne({
         where: {id},
@@ -71,7 +78,7 @@ export class CoursesService {
     }
   }
 
-  async addCourseChapter(id: number, updateCourseDto: UpdateCourseDto) {
+  async addCourseChapter(id: string, updateCourseDto: UpdateCourseDto) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }
@@ -87,7 +94,7 @@ export class CoursesService {
     }
   }
 
-  async update(id: number, updateCourseDto: UpdateCourseDto) {
+  async update(id: string, updateCourseDto: UpdateCourseDto) {
     try {
       const course = await this.courseRepository.findOne({
         where: {id}
@@ -103,7 +110,7 @@ export class CoursesService {
     }
   }
 
-  async updateOtherPartOfCourse(id: number, updateOtherCourseDto: UpdateOtherCourseDto) {
+  async updateOtherPartOfCourse(id: string, updateOtherCourseDto: UpdateOtherCourseDto) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }
@@ -119,7 +126,7 @@ export class CoursesService {
     }
   }
 
-  async updateCourseImage(id: number, updateCourseImageDto: UpdateCourseImageDto) {
+  async updateCourseImage(id: string, updateCourseImageDto: UpdateCourseImageDto) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }
@@ -161,7 +168,7 @@ export class CoursesService {
     }
   }
   
-  async updateCourseAttachment(id: number, updateCourseImageDto: UpdateCourseImageDto) {
+  async updateCourseAttachment(id: string, updateCourseImageDto: UpdateCourseImageDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -196,31 +203,31 @@ export class CoursesService {
   }
   
 
-  async addCategory(id: number, updateCourseDto: UpdateCourseCategoryDto) {
-    try {
-      const course = await this.courseRepository.findOne({
-        where: { id }
-      });
+  // async addCategory(id: string, updateCourseDto: UpdateCourseCategoryDto) {
+  //   try {
+  //     const course = await this.courseRepository.findOne({
+  //       where: { id }
+  //     });
 
-      if (!course) throw new NotFoundException("Course not found, please refresh");
+  //     if (!course) throw new NotFoundException("Course not found, please refresh");
 
-      const category = await this.categoryRepository.findOne({
-        where: { name: updateCourseDto.category }
-      });
+  //     const category = await this.categoryRepository.findOne({
+  //       where: { name: updateCourseDto.category }
+  //     });
 
-      if (!category) throw new NotFoundException("Category not found, please refresh");
+  //     if (!category) throw new NotFoundException("Category not found, please refresh");
 
-      await this.courseRepository.update(course.id, {
-        category
-      });
+  //     // await this.courseRepository.update(course.id, {
+  //     //   category
+  //     // });
 
-      return { message: "Course category updated successfully" }
-    } catch (error) {
-      throw error;
-    }
-  }
+  //     return { message: "Course category updated successfully" }
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       const course = await this.courseRepository.findOne({
         where: { id }

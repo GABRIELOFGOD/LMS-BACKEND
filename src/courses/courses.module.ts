@@ -3,14 +3,12 @@ import { CoursesService } from './courses.service';
 import { CoursesController } from './courses.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
-import { Video } from './entities/video.entity';
 import { CloudinaryService } from 'src/config/cloudinary.config';
-import { Category } from 'src/categories/entities/category.entity';
 import { Attachment } from './entities/attachment.entity';
 import { Chapters } from 'src/chapters/entities/chapter.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Course, Chapters, Video, Category, Attachment])],
+  imports: [TypeOrmModule.forFeature([Course, Chapters, Attachment])],
   controllers: [CoursesController],
   providers: [CoursesService, CloudinaryService],
 })

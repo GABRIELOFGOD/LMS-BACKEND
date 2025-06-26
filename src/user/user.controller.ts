@@ -23,8 +23,12 @@ export class UserController {
   }
 
   @Post('send-otp')
-  sendOTP(@Body('email') email: string) {
-    return this.userService.registrationOTP(email);
+  async sendOTP(@Body('email') email: string) {
+    await this.userService.registrationOTP(email);
+    return {
+      message: "OTP resent successfully",
+      success: true,
+    }
   }
 
   @Get()
