@@ -64,6 +64,7 @@
       @Param('id') id: string,
       @UploadedFile() updateCourseImageDto: UpdateCourseImageDto
     ) {
+      console.log("[GOT HERE]: ", updateCourseImageDto);
       return this.coursesService.updateCourseImage(id, updateCourseImageDto);
     }
 

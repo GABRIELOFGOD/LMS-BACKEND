@@ -12,6 +12,10 @@ export class UpdateOtherCourseDto {
   @IsNumber()
   @IsOptional()
   price: number;
+
+  @IsString()
+  @IsOptional()
+  title: string;
 }
 
 export class UpdateCourseCategoryDto {

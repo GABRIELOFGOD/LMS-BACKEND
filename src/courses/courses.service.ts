@@ -67,7 +67,7 @@ export class CoursesService {
     try {
       const course = await this.courseRepository.findOne({
         where: {id},
-        relations: ["category", "attachments", "chapters", "chapters.videos"]
+        relations: ["attachments", "chapters"]
       });
 
       if (!course) throw new NotFoundException("Course not found");
@@ -102,9 +102,9 @@ export class CoursesService {
 
       if (!course) throw new NotFoundException("Course not found");
 
-      const updatedCourse = await this.courseRepository.update(course.id, updateCourseDto);
+      await this.courseRepository.update(course.id, updateCourseDto);
 
-      return { message: "Course updated successfully", updatedCourse }
+      return { message: "Course updated successfully" }
     } catch (error) {
       throw error
     }
