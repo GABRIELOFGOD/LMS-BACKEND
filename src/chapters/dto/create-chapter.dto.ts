@@ -1,4 +1,4 @@
-import { IsString } from "class-validator";
+import { IsOptional, IsString } from "class-validator";
 
 export class CreateChapterDto {
   @IsString()
@@ -6,4 +6,10 @@ export class CreateChapterDto {
 
   @IsString()
   courseId: string;
+
+}
+
+export class UploadVideoDto {
+  @IsOptional()
+  video: any;
 }

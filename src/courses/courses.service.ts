@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,8 @@ import { Course } from './entities/course.entity';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { CloudinaryService } from 'src/config/cloudinary.config';
 import { Attachment } from './entities/attachment.entity';
+import { User } from 'src/user/entities/user.entity';
+import { UserRole } from 'src/types/user';
 
 @Injectable()
 export class CoursesService {
@@ -16,7 +18,10 @@ export class CoursesService {
     @InjectRepository(Attachment)
     private readonly attachmentRepository: Repository<Attachment>,
     private readonly dataSource: DataSource,
-    private readonly cloudinarySe: CloudinaryService
+    private readonly cloudinarySe: CloudinaryService,
+
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ){}
   
   async create(createCourseDto: CreateCourseDto) {
@@ -55,8 +60,8 @@ export class CoursesService {
   async findAllPublished() {
     try {
       return await this.courseRepository.find({
-        select: ["publish"],
         where: { publish: true },
+        relations: ["chapters"]
       });
     } catch (error) {
       throw error;
@@ -136,11 +141,10 @@ export class CoursesService {
 
       const uploadedImage = await this.cloudinarySe.uploadImage(updateCourseImageDto);
 
-      const newCourse = await this.courseRepository.update(course.id, {
+      await this.courseRepository.update(course.id, {
         imageUrl: uploadedImage
       });
 
-      console.log("new Course with image", newCourse);
       return { message: "Course image updated successfully." }
     } catch (error) {
       throw error;
@@ -226,6 +230,77 @@ export class CoursesService {
   //     throw error;
   //   }
   // }
+
+  async publishCourse(id: string) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id },
+        relations: ["chapters"]
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      if (!course.publish) {
+        if (!course.title) throw new BadRequestException("Course must have Title to be published");
+
+        if (!course.description) throw new BadRequestException("Course must have Description to be published");
+
+        if (!course.imageUrl) throw new BadRequestException("Course must have an Image to be published");
+        
+        const hasPublishedChapter = course.chapters.some((cht) => cht.isPublished);
+        if (!hasPublishedChapter) throw new BadRequestException("You must have at least one published chapter to publish this course");
+      }
+      
+      course.publish = !course.publish;
+      await this.courseRepository.save(course);
+      return {
+        message: "Course publication updated successfully"
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // ================= ENROLL ========================= //
+  async enrolCourse(courseId: string, req: string) {
+    console.log("REQ", req);
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: req },
+        relations: ["enrolled"]
+      });
+      console.log("USER", user);
+
+      console.log("[GOT HERE]");
+
+      if (!user) throw new NotFoundException("Please log in to enroll for a course.");
+      if (user.role !== UserRole.STUDENT) throw new BadRequestException("Only students can enroll in courses.");
+
+      const course = await this.courseRepository.findOne({
+        where: { id: courseId },
+        relations: ["students"]
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh.");
+
+      if (course.isDeleted) throw new BadRequestException("This course has been deleted and cannot be enrolled in.");
+
+      const alreadyEnrolled = course.students.some(student => student.id === user.id);
+      if (alreadyEnrolled) throw new ConflictException("You are already enrolled in this course.");
+
+      // ✅ Add user to course only (TypeORM handles the relation automatically)
+      course.students.push(user);
+      await this.courseRepository.save(course);
+
+      return {
+        message: `Congratulations ${user.fname} ${user.lname}, you have successfully enrolled in: ${course.title}`
+      };
+
+    } catch (error) {
+      throw error;
+    }
+  }
+  // ================= ENROLL ========================= //
 
   async remove(id: string) {
     try {

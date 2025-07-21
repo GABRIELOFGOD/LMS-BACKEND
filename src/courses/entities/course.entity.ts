@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Attachment } from "./attachment.entity";
 import { Chapters } from "src/chapters/entities/chapter.entity";
+import { User } from "src/user/entities/user.entity";
 
 @Entity({ name: "courses" })
 export class Course {
@@ -27,6 +28,12 @@ export class Course {
 
   @OneToMany(() => Chapters, (chapter) => chapter.course)
   chapters: Chapters[];
+
+  @ManyToMany(() => User, (user) => user.enrolled)
+  students: User[];
+
+  @Column({ default: false })
+  isDeleted: boolean;
 
   // @ManyToOne(() => Category, (category) => category.courses)
   // category: Category;

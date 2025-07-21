@@ -1,4 +1,4 @@
-  import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, UseGuards, HttpStatus, HttpCode } from '@nestjs/common';
+  import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, UseGuards, HttpStatus, HttpCode, Request } from '@nestjs/common';
   import { CoursesService } from './courses.service';
   import { CreateCourseDto } from './dto/create-course.dto';
   import { UpdateCourseDto, UpdateCourseImageDto, UpdateOtherCourseDto } from './dto/update-course.dto';
@@ -7,6 +7,7 @@
   import { JwtAuthGuard } from 'src/auth/guards/jwt-auth/jwt-auth.guard';
   import { RolesGuard } from 'src/auth/guards/role/roles.guard';
   import { Roles } from 'src/core/decoratoros/roles.decorator';
+import { UserRole } from 'src/types/user';
 
   @Controller('courses')
   export class CoursesController {
@@ -64,7 +65,6 @@
       @Param('id') id: string,
       @UploadedFile() updateCourseImageDto: UpdateCourseImageDto
     ) {
-      console.log("[GOT HERE]: ", updateCourseImageDto);
       return this.coursesService.updateCourseImage(id, updateCourseImageDto);
     }
 
@@ -87,6 +87,27 @@
     @Put(':id')
     updateOthers(@Param('id') id: string, @Body() updateOtherCourseDto: UpdateOtherCourseDto) {
       return this.coursesService.updateOtherPartOfCourse(id, updateOtherCourseDto);
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
+    @Put(":id/published")
+    publishCourse(
+      @Param('id') id: string
+    ){
+      return this. coursesService.publishCourse(id);
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.STUDENT)
+    @Put("enroll/:id")
+    enrolCourse(
+      @Param('id') id: string,
+      @Request() req
+    ){
+      return this.coursesService.enrolCourse(id, req.user.id);
     }
 
     @Delete(':id')

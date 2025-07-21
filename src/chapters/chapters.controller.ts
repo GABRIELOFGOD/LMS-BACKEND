@@ -1,43 +1,9 @@
-// import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-// import { ChaptersService } from './chapters.service';
-// import { CreateChapterDto } from './dto/create-chapter.dto';
-// import { UpdateChapterDto } from './dto/update-chapter.dto';
-
-// @Controller('chapters')
-// export class ChaptersController {
-//   constructor(private readonly chaptersService: ChaptersService) {}
-
-//   @Post()
-//   create(@Body() createChapterDto: CreateChapterDto) {
-//     return this.chaptersService.create(createChapterDto);
-//   }
-
-//   @Get()
-//   findAll() {
-//     return this.chaptersService.findAll();
-//   }
-
-//   @Get(':id')
-//   findOne(@Param('id') id: string) {
-//     return this.chaptersService.findOne(+id);
-//   }
-
-//   @Patch(':id')
-//   update(@Param('id') id: string, @Body() updateChapterDto: UpdateChapterDto) {
-//     return this.chaptersService.update(+id, updateChapterDto);
-//   }
-
-//   @Delete(':id')
-//   remove(@Param('id') id: string) {
-//     return this.chaptersService.remove(+id);
-//   }
-// }
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Put, UseInterceptors, UploadedFile, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { ChaptersService } from './chapters.service';
-import { CreateChapterDto } from './dto/create-chapter.dto';
+import { CreateChapterDto, UploadVideoDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/role/roles.guard';
@@ -50,9 +16,21 @@ export class ChaptersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
+  @UseInterceptors(
+    FileInterceptor('video', {
+      storage: diskStorage({
+      filename: (_, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+      },
+    }),
+    })
+  )
   @Post()
-  create(@Body() createChapterDto: CreateChapterDto) {
-    return this.chaptersService.create(createChapterDto);
+  create(
+    @Body() createChapterDto: CreateChapterDto,
+    @UploadedFile() uploadVideoDto: UploadVideoDto
+  ) {
+    return this.chaptersService.create(createChapterDto, uploadVideoDto);
   }
 
   @Get()

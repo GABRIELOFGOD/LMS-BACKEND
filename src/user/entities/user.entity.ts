@@ -1,6 +1,7 @@
 import { UserRole } from "src/types/user";
-import { BeforeInsert, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, Column, CreateDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import * as bcrypt from 'bcryptjs';
+import { Course } from "src/courses/entities/course.entity";
 
 @Entity("user")
 export class User {
@@ -48,12 +49,14 @@ export class User {
   @Column({ type: "enum", enum: UserRole, default: UserRole.STUDENT })
   role: UserRole;
 
+  @ManyToMany(() => Course, (course) => course.students)
+  enrolled: Course[];
+
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
   @UpdateDateColumn({ type: "timestamp" })
   updatedAt: Date;
-
 
   @BeforeInsert()
   async hashPassword() {
