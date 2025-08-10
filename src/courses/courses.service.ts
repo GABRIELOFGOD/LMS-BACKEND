@@ -288,7 +288,6 @@ export class CoursesService {
       const alreadyEnrolled = course.students.some(student => student.id === user.id);
       if (alreadyEnrolled) throw new ConflictException("You are already enrolled in this course.");
 
-      // ✅ Add user to course only (TypeORM handles the relation automatically)
       course.students.push(user);
       await this.courseRepository.save(course);
 
