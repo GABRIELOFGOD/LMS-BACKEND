@@ -9,14 +9,17 @@ import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from '../config/jwt.config';
 import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
+import { Certificate } from 'src/certificate/entities/certificate.entity';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, CourseProgress, Certificate]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig)
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, UserService, LocalStrategy, JwtStrategy, EmailService],
 })
 export class AuthModule {}

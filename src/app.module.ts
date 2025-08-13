@@ -13,6 +13,9 @@ import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { EmailService } from './email/email.service';
 import jwtConfig from './config/jwt.config';
+import { CourseProgress } from './courses/entities/courseProgress.entity';
+import { CertificateModule } from './certificate/certificate.module';
+import { Certificate } from './certificate/entities/certificate.entity';
 
 @Module({
   imports: [
@@ -21,29 +24,32 @@ import jwtConfig from './config/jwt.config';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      // useFactory: (configService: ConfigService) => ({
-      //   type: 'postgres',
-      //   host: configService.get<string>('DATABASE_HOST'),
-      //   port: configService.get<number>('DATABASE_PORT'),
-      //   username: configService.get<string>('DATABASE_USER'),
-      //   password: configService.get<string>('DATABASE_PASSWORD'),
-      //   database: configService.get<string>('DATABASE_NAME'),
-      //   entities: [Course, Chapters, Attachment, User],
-      //   synchronize: true, // ⚠️ Set to false in production!
-      // }),
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
-        entities: [Course, Chapters, Attachment, User],
+        host: configService.get<string>('DATABASE_HOST'),
+        port: configService.get<number>('DATABASE_PORT'),
+        username: configService.get<string>('DATABASE_USER'),
+        password: configService.get<string>('DATABASE_PASSWORD'),
+        database: configService.get<string>('DATABASE_NAME'),
+        entities: [Course, Chapters, Attachment, User, CourseProgress, Certificate],
         synchronize: true, // ⚠️ Set to false in production!
-        ssl: process.env.NODE_ENV === 'production'
-          ? { rejectUnauthorized: false }
-          : false
       }),
+
+      // TODO: CHANGE THIS IN PRODUCTION
+      // useFactory: (configService: ConfigService) => ({
+      //   type: 'postgres',
+      //   url: configService.get<string>('DATABASE_URL'),
+      //   entities: [Course, Chapters, Attachment, User, CourseProgress],
+      //   synchronize: true, // ⚠️ Set to false in production!
+      //   ssl: process.env.NODE_ENV === 'production'
+      //     ? { rejectUnauthorized: false }
+      //     : false
+      // }),
     }),
     ChaptersModule,
     AuthModule,
-    UserModule
+    UserModule,
+    CertificateModule
   ],
   controllers: [AppController],
   providers: [AppService, EmailService],

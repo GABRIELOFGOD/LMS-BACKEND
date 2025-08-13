@@ -6,12 +6,24 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { OtpDto } from './dto/otp.dto';
 import { UserRole } from 'src/types/user';
+import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
+// import { Course } from 'src/courses/entities/course.entity';
+import { Certificate } from 'src/certificate/entities/certificate.entity';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(CourseProgress)
+    private readonly progressRepository: Repository<CourseProgress>,
+
+    @InjectRepository(Certificate)
+    private readonly certificateRepository: Repository<Certificate>,
+
+    private readonly emailService: EmailService
   ) {}
   
   async registrationOTP(email: string) {
@@ -27,9 +39,7 @@ export class UserService {
     userExists.otp = otp;
     userExists.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await this.userRepository.save(userExists);
-    
-    // TODO: Send OTP to email
-    console.log(`OTP for ${email}: ${otp}`);
+    await this.emailService.sendOtp(otp, email);
   }
 
   async verifyOTP(otpDto: OtpDto) {
@@ -73,7 +83,7 @@ export class UserService {
         ...userWithoutPassword
       } = savedUser;
       return {
-        message: "Users created successfully",
+        message: "Users created successfully, an otp has been sent to your email",
         success: true,
         data: userWithoutPassword
       };
@@ -85,8 +95,40 @@ export class UserService {
   async getProfile(id: string) {
     return await this.userRepository.findOne({
       where: { id },
-      select: ["fname", "lname", "email", "role", "address", "bio", "id", "createdAt", "updatedAt"]
+      select: ["fname", "lname", "email", "role", "address", "bio", "id", "createdAt", "updatedAt", "address", "isVerified", "phone"]
     });
+  }
+
+  async getOtherInfo(id: string) {
+    try {
+      let contents: {
+        progress: CourseProgress[];
+        certificates: Certificate[];
+      } = {
+        progress: [],
+        certificates: []
+      };
+      const progress = await this.progressRepository.find({
+        where: { user: { id } },
+        relations: ['course', 'user'],
+      });
+      if (progress){
+        contents = {...contents, progress}
+      }
+
+      const certificates = await this.certificateRepository.find({
+        where: { user: { id } },
+        relations: ['course', 'user'],
+      });
+      if (certificates) {
+        contents.certificates = certificates;
+      }
+
+      return contents;
+
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findAll() {
@@ -143,7 +185,22 @@ export class UserService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['id'], // Only select the ID to avoid loading relations
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    await this.userRepository.delete(id);
+
+    return {
+      message: `User with id ${id} removed successfully`,
+      success: true,
+    };
   }
+
 }

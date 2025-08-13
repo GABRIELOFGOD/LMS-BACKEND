@@ -32,7 +32,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
   @Get()
   findAll() {
     return this.userService.findAll();
@@ -45,25 +45,37 @@ export class UserController {
     return this.userService.getProfile(req.user.id);
   }
 
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Get("info")
+  getOtherInfo(@Request() req) {
+    return this.userService.getOtherInfo(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(id, updateUserDto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles("admin")
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @Patch('role/:id')
   updateRole(@Param("id") id: string, @Body("role") role: UserRole) {
     return this.userService.updateRole(id, role);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+    return this.userService.remove(id);
   }
 }
