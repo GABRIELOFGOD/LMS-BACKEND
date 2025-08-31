@@ -33,16 +33,23 @@ export class ChaptersController {
     return this.chaptersService.create(createChapterDto, uploadVideoDto);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @HttpCode(HttpStatus.OK)
   @Get()
   findAll() {
     return this.chaptersService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   @Get('course/:courseId')
   findByCourse(@Param('courseId') courseId: string) {
     return this.chaptersService.findByCourse(courseId);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.chaptersService.findOne(id);

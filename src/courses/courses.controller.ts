@@ -16,7 +16,7 @@ import { UserRole } from 'src/types/user';
     ) {}
 
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles("admin", "teacher")
+    @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
     @Post()
     create(@Body() createCourseDto: CreateCourseDto) {
       return this.coursesService.create(createCourseDto);
@@ -24,7 +24,7 @@ import { UserRole } from 'src/types/user';
 
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles("admin", "teacher")
+    @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
     @Get()
     findAll() {
       return this.coursesService.findAll();
