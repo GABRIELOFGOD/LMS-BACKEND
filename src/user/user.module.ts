@@ -6,9 +6,10 @@ import { User } from './entities/user.entity';
 import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
 import { Certificate } from 'src/certificate/entities/certificate.entity';
 import { EmailService } from 'src/email/email.service';
+import { Enrollment } from 'src/courses/entities/enrollments.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, CourseProgress, Certificate])],
+  imports: [TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment])],
   controllers: [UserController],
   providers: [UserService, EmailService],
 })

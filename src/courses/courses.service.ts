@@ -8,6 +8,7 @@ import { CloudinaryService } from 'src/config/cloudinary.config';
 import { Attachment } from './entities/attachment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserRole } from 'src/types/user';
+import { Enrollment } from './entities/enrollments.entity';
 
 @Injectable()
 export class CoursesService {
@@ -22,6 +23,9 @@ export class CoursesService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(Enrollment)
+    private readonly enrollmentRepository: Repository<Enrollment>,
   ){}
   
   async create(createCourseDto: CreateCourseDto) {
@@ -262,39 +266,45 @@ export class CoursesService {
   }
 
   // ================= ENROLL ========================= //
-  async enrolCourse(courseId: string, req: string) {
-    console.log("REQ", req);
+  async enrolCourse(courseId: string, userId: string) {
     try {
-      const user = await this.userRepository.findOne({
-        where: { id: req },
-        relations: ["enrolled"]
-      });
-      console.log("USER", user);
-
-      console.log("[GOT HERE]");
-
+      // 1. Find user
+      const user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) throw new NotFoundException("Please log in to enroll for a course.");
-      if (user.role !== UserRole.STUDENT) throw new BadRequestException("Only students can enroll in courses.");
+      if (user.role !== UserRole.STUDENT)
+        throw new BadRequestException("Only students can enroll in courses.");
 
+      // 2. Find course
       const course = await this.courseRepository.findOne({
         where: { id: courseId },
-        relations: ["students"]
+      });
+      if (!course) throw new NotFoundException("Course not found, please refresh.");
+      if (course.isDeleted)
+        throw new BadRequestException("This course has been deleted and cannot be enrolled in.");
+
+      // 3. Check if already enrolled
+      const existingEnrollment = await this.enrollmentRepository.findOne({
+        where: {
+          student: { id: userId },
+          course: { id: courseId },
+        },
+        relations: ["student", "course"],
       });
 
-      if (!course) throw new NotFoundException("Course not found, please refresh.");
+      if (existingEnrollment)
+        throw new ConflictException("You are already enrolled in this course.");
 
-      if (course.isDeleted) throw new BadRequestException("This course has been deleted and cannot be enrolled in.");
+      // 4. Create new enrollment
+      const enrollment = this.enrollmentRepository.create({
+        student: user,
+        course: course,
+      });
 
-      const alreadyEnrolled = course.students.some(student => student.id === user.id);
-      if (alreadyEnrolled) throw new ConflictException("You are already enrolled in this course.");
-
-      course.students.push(user);
-      await this.courseRepository.save(course);
+      await this.enrollmentRepository.save(enrollment);
 
       return {
-        message: `Congratulations ${user.fname} ${user.lname}, you have successfully enrolled in: ${course.title}`
+        message: `Congratulations ${user.fname} ${user.lname}, you have successfully enrolled in: ${course.title}`,
       };
-
     } catch (error) {
       throw error;
     }

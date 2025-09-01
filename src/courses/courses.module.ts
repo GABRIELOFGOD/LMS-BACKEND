@@ -7,9 +7,10 @@ import { CloudinaryService } from 'src/config/cloudinary.config';
 import { Attachment } from './entities/attachment.entity';
 import { Chapters } from 'src/chapters/entities/chapter.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Enrollment } from './entities/enrollments.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Course, Chapters, Attachment, User])],
+  imports: [TypeOrmModule.forFeature([Course, Chapters, Attachment, User, Enrollment])],
   controllers: [CoursesController],
   providers: [CoursesService, CloudinaryService],
 })
