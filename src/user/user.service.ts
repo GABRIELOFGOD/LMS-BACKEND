@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +14,10 @@ import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
 // import { Course } from 'src/courses/entities/course.entity';
 import { Certificate } from 'src/certificate/entities/certificate.entity';
 import { EmailService } from 'src/email/email.service';
+import { Course } from 'src/courses/entities/course.entity';
+import { Enrollment } from 'src/courses/entities/enrollments.entity';
+import { Attachment } from 'src/courses/entities/attachment.entity';
+import { startOfMonth, subMonths, isAfter, isBefore } from 'date-fns';
 
 @Injectable()
 export class UserService {
@@ -23,17 +31,28 @@ export class UserService {
     @InjectRepository(Certificate)
     private readonly certificateRepository: Repository<Certificate>,
 
-    private readonly emailService: EmailService
+    @InjectRepository(Enrollment)
+    private readonly enrollRepository: Repository<Enrollment>,
+
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+
+    @InjectRepository(Attachment)
+    private readonly attachmentRepository: Repository<Attachment>,
+
+    private readonly emailService: EmailService,
   ) {}
-  
+
   async registrationOTP(email: string) {
     if (!email) throw new NotFoundException('Email is required');
     const userExists = await this.userRepository.findOne({
       where: { email },
     });
     if (!userExists) throw new UnauthorizedException('User not found');
-    if (userExists.isBlocked) throw new UnauthorizedException('User is blocked');
-    if (userExists.isDeleted) throw new UnauthorizedException('User is deleted');
+    if (userExists.isBlocked)
+      throw new UnauthorizedException('User is blocked');
+    if (userExists.isDeleted)
+      throw new UnauthorizedException('User is deleted');
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     userExists.otp = otp;
@@ -47,7 +66,8 @@ export class UserService {
     if (!user) throw new UnauthorizedException('User not found');
     if (user.isBlocked) throw new UnauthorizedException('User is blocked');
     if (user.isDeleted) throw new UnauthorizedException('User is deleted');
-    if (user.isVerified) throw new UnauthorizedException('User is already verified');
+    if (user.isVerified)
+      throw new UnauthorizedException('User is already verified');
     if (user.otp !== otpDto.otp) throw new UnauthorizedException('Invalid OTP');
 
     const currentTime = new Date();
@@ -59,9 +79,8 @@ export class UserService {
     user.otpExpires = null;
     await this.userRepository.save(user);
     return { message: 'User verified successfully', success: true };
-
   }
-  
+
   async create(createUserDto: CreateUserDto) {
     try {
       const userExists = await this.userRepository.findOne({
@@ -83,9 +102,10 @@ export class UserService {
         ...userWithoutPassword
       } = savedUser;
       return {
-        message: "Users created successfully, an otp has been sent to your email",
+        message:
+          'Users created successfully, an otp has been sent to your email',
         success: true,
-        data: userWithoutPassword
+        data: userWithoutPassword,
       };
     } catch (error) {
       throw error;
@@ -95,7 +115,20 @@ export class UserService {
   async getProfile(id: string) {
     return await this.userRepository.findOne({
       where: { id },
-      select: ["fname", "lname", "email", "role", "address", "bio", "id", "createdAt", "updatedAt", "address", "isVerified", "phone"]
+      select: [
+        'fname',
+        'lname',
+        'email',
+        'role',
+        'address',
+        'bio',
+        'id',
+        'createdAt',
+        'updatedAt',
+        'address',
+        'isVerified',
+        'phone',
+      ],
     });
   }
 
@@ -104,16 +137,24 @@ export class UserService {
       let contents: {
         progress: CourseProgress[];
         certificates: Certificate[];
+        coursesCompleted: Course[];
+        coursesEnrolled: Course[];
+        currentStraek: number;
+        longestStreak: number;
       } = {
         progress: [],
-        certificates: []
+        certificates: [],
+        coursesCompleted: [],
+        coursesEnrolled: [],
+        currentStraek: 6,
+        longestStreak: 10,
       };
       const progress = await this.progressRepository.find({
         where: { user: { id } },
         relations: ['course', 'user'],
       });
-      if (progress){
-        contents = {...contents, progress}
+      if (progress) {
+        contents = { ...contents, progress };
       }
 
       const certificates = await this.certificateRepository.find({
@@ -124,8 +165,14 @@ export class UserService {
         contents.certificates = certificates;
       }
 
-      return contents;
+      const coursesEnrolledFor = await this.enrollRepository.find({
+        where: { student: { id } },
+        relations: ['student', 'course'],
+      });
 
+      contents.coursesEnrolled = coursesEnrolledFor.map((enr) => enr.course);
+
+      return contents;
     } catch (error) {
       throw error;
     }
@@ -134,26 +181,26 @@ export class UserService {
   async findAll() {
     return await this.userRepository.find({
       select: [
-        "id",
-        "fname",
-        "lname",
-        "email",
-        "role",
-        "address",
-        "bio",
-        "createdAt",
-        "updatedAt"
-      ]
+        'id',
+        'fname',
+        'lname',
+        'email',
+        'role',
+        'address',
+        'bio',
+        'createdAt',
+        'updatedAt',
+      ],
     });
   }
 
   async findOne(id: string) {
     try {
       const user = await this.userRepository.findOne({
-        where: { id }
+        where: { id },
       });
 
-      if (!user) throw new NotFoundException("User not found");
+      if (!user) throw new NotFoundException('User not found');
       return user;
     } catch (error) {
       throw error;
@@ -171,6 +218,94 @@ export class UserService {
     }
   }
 
+  async superStats(id: string) {
+    try {
+      const user = await this.userRepository.findOne({ where: { id } });
+      if (!user) throw new NotFoundException('User not found');
+
+      const details = {
+        name: `${user.fname} ${user.lname}`,
+        bio: user.bio,
+        avatar: '',
+        initials: `${user.fname.slice(0, 1)}${user.lname.slice(0, 1)}`,
+        joinedAt: user.createdAt,
+      };
+
+      // Fetch all
+      const allUsers = await this.userRepository.find();
+      const allCourses = await this.courseRepository.find();
+      const allResources = await this.attachmentRepository.find({
+        relations: ['course'],
+      });
+      const allCertificates = await this.certificateRepository.find({
+        relations: ['user', 'course'],
+      });
+
+      // Date ranges
+      const now = new Date();
+      const startOfCurrentMonth = startOfMonth(now);
+      const startOfPrevMonth = startOfMonth(subMonths(now, 1));
+
+      // Helper to calculate trend
+      const calcTrend = (arr: any[]): string => {
+        const currentMonth = arr.filter((i) =>
+          isAfter(i.createdAt, startOfCurrentMonth),
+        ).length;
+
+        const prevMonth = arr.filter(
+          (i) =>
+            isAfter(i.createdAt, startOfPrevMonth) &&
+            isBefore(i.createdAt, startOfCurrentMonth),
+        ).length;
+
+        if (prevMonth === 0 && currentMonth > 0) return '↑ 100%';
+        if (prevMonth === 0 && currentMonth === 0) return '0%';
+
+        const percentage = ((currentMonth - prevMonth) / prevMonth) * 100;
+
+        if (percentage > 0) return `↑ ${percentage.toFixed(1)}%`;
+        if (percentage < 0) return `↓ ${Math.abs(percentage).toFixed(1)}%`;
+        return '0%';
+      };
+
+      const stats = [
+        {
+          title: 'Total Users',
+          value: allUsers.filter((user) => user.role !== UserRole.SUPER_ADMIN)
+            .length,
+          icon: 'total-user',
+          trend: calcTrend(
+            allUsers.filter((user) => user.role !== UserRole.SUPER_ADMIN),
+          ),
+        },
+        {
+          title: 'Active Courses',
+          value: allCourses.filter((course) => course.publish === true).length,
+          icon: 'active-course',
+          trend: calcTrend(
+            allCourses.filter((course) => course.publish === true),
+          ),
+        },
+        {
+          title: 'Resources',
+          value: allResources.length,
+          icon: 'total-resources',
+          trend: calcTrend(allResources),
+        },
+        {
+          title: 'Certifications',
+          value: allCertificates.length,
+          icon: 'total-certifications',
+          trend: calcTrend(allCertificates),
+        },
+      ];
+
+      return { details, stats };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   update(id: string, updateUserDto: UpdateUserDto) {
     return `This action updates a #${id} user`;
   }
@@ -181,8 +316,8 @@ export class UserService {
 
     await this.userRepository.save(user);
     return {
-      message: "Users role updated successfully!"
-    }
+      message: 'Users role updated successfully!',
+    };
   }
 
   async remove(id: string) {
@@ -202,5 +337,4 @@ export class UserService {
       success: true,
     };
   }
-
 }

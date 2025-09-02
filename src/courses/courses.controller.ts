@@ -100,12 +100,11 @@ import { UserRole } from 'src/types/user';
     }
 
     @HttpCode(HttpStatus.OK)
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(UserRole.STUDENT)
+    @UseGuards(JwtAuthGuard)
     @Put("enroll/:id")
     enrolCourse(
-      @Param('id') id: string,
-      @Request() req
+      @Request() req,
+      @Param('id') id: string
     ){
       return this.coursesService.enrolCourse(id, req.user.id);
     }

@@ -1,6 +1,6 @@
 import { Course } from "src/courses/entities/course.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity("certificate")
 export class Certificate {
@@ -26,4 +26,10 @@ export class Certificate {
 
   @Column()
   status: string;
+
+  @CreateDateColumn({ type: "timestamp" })
+  createdAt: Date;
+  
+  @UpdateDateColumn({ type: "timestamp" })
+  updatedAt: Date;
 }

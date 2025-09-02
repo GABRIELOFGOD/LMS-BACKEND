@@ -31,6 +31,14 @@ export class UserController {
     }
   }
 
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Get("admin-stats")
+  superStats(@Request() req) {
+    return this.userService.superStats(req.user.id);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
   @Get()
@@ -47,7 +55,7 @@ export class UserController {
 
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
-  @Get("info")
+  @Get("stats")
   getOtherInfo(@Request() req) {
     return this.userService.getOtherInfo(req.user.id);
   }

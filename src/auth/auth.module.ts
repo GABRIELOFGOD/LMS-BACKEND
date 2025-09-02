@@ -12,10 +12,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
 import { Certificate } from 'src/certificate/entities/certificate.entity';
 import { EmailService } from 'src/email/email.service';
+import { Enrollment } from 'src/courses/entities/enrollments.entity';
+import { Attachment } from 'src/courses/entities/attachment.entity';
+import { Course } from 'src/courses/entities/course.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, CourseProgress, Certificate]),
+    TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment, Course, Attachment]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig)
   ],
