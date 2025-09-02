@@ -33,7 +33,7 @@ import { Enrollment } from './courses/entities/enrollments.entity';
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
         entities: [Course, Chapters, Attachment, User, CourseProgress, Certificate, Enrollment],
-        synchronize: true, // ⚠️ Set to false in production!
+        synchronize: false, // ⚠️ Set to false in production!
       }),
 
       // TODO: CHANGE THIS IN PRODUCTION
