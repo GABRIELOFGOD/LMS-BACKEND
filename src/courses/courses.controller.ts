@@ -31,6 +31,13 @@ import { UserRole } from 'src/types/user';
     }
 
     @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard)
+    @Get("user/:id")
+    GetUserCourses(@Param('id') id: string){
+      return this.coursesService.GetUserCourses(id);
+    }
+
+    @HttpCode(HttpStatus.OK)
     @Get("published")
     findAllPublished() {
       return this.coursesService.findAllPublished();
@@ -112,5 +119,13 @@ import { UserRole } from 'src/types/user';
     @Delete(':id')
     remove(@Param('id') id: string) {
       return this.coursesService.remove(id);
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.SUPER_ADMIN)
+    @Put(':id/restore')
+    async restore(@Param('id') id: string) {
+      return this.coursesService.restore(id);
     }
   }

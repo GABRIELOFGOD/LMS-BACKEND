@@ -113,7 +113,7 @@ export class UserService {
   }
 
   async getProfile(id: string) {
-    return await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id },
       select: [
         'fname',
@@ -130,6 +130,9 @@ export class UserService {
         'phone',
       ],
     });
+
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
   async getOtherInfo(id: string) {
@@ -189,7 +192,7 @@ export class UserService {
         'address',
         'bio',
         'createdAt',
-        'updatedAt',
+        'updatedAt'
       ],
     });
   }
@@ -306,8 +309,13 @@ export class UserService {
     }
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      await this.userRepository.update(id, updateUserDto);
+      return { message: 'User updated successfully' };
+    } catch (error) {
+      throw error;
+    }
   }
 
   async updateRole(id: string, role: UserRole) {

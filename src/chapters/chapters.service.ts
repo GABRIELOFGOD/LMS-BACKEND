@@ -184,16 +184,16 @@ export class ChaptersService {
         if (!chapter) throw new NotFoundException('Chapter not found');
 
         // Validate video file
-        if (!videoFile) throw new BadRequestException('No video file provided');
+        if (!videoFile) throw new BadRequestException('No video or PDF file provided');
         
-        const allowedMimeTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime'];
+        const allowedMimeTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         if (!allowedMimeTypes.includes(videoFile.mimetype)) {
           throw new BadRequestException('Invalid video format. Only MP4, AVI, MOV are allowed');
         }
 
         const maxSize = 500 * 1024 * 1024; // 500MB
         if (videoFile.size > maxSize) {
-          throw new BadRequestException('Video file size must be less than 500MB');
+          throw new BadRequestException('Video or PDF file size must be less than 500MB');
         }
 
         let oldVideoToDelete = null;
@@ -230,12 +230,100 @@ export class ChaptersService {
           where: { id }
         });
 
-        return { message: "Video uploaded successfully", chapter: updatedChapter };
+        return { message: "Chapter file uploaded successfully", chapter: updatedChapter };
       } catch (error) {
         throw error;
       }
     });
   }
+
+  // async uploadVideo(id: string, file: any) {
+  //   return await this.dataSource.transaction(async manager => {
+  //     try {
+  //       const chapter = await manager.findOne(Chapters, { where: { id } });
+  //       if (!chapter) throw new NotFoundException('Chapter not found');
+
+  //       if (!file) throw new BadRequestException('No file provided');
+
+  //       // Allowed MIME types
+  //       const allowedVideoTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime'];
+  //       const allowedDocTypes = [
+  //         'application/pdf',
+  //         'application/msword',
+  //         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  //       ];
+
+  //       const isVideo = allowedVideoTypes.includes(file.mimetype);
+  //       const isDoc = allowedDocTypes.includes(file.mimetype);
+
+  //       if (!isVideo && !isDoc) {
+  //         throw new BadRequestException('Invalid file format. Only MP4, AVI, MOV, PDF, DOC, DOCX are allowed');
+  //       }
+
+  //       // Size validation
+  //       if (isVideo && file.size > 500 * 1024 * 1024) {
+  //         throw new BadRequestException('Video file size must be less than 500MB');
+  //       }
+  //       if (isDoc && file.size > 20 * 1024 * 1024) {
+  //         throw new BadRequestException('Document file size must be less than 20MB');
+  //       }
+
+  //       let oldFileToDelete = null;
+  //       let uploadedFileUrl;
+
+  //       if (isVideo) {
+  //         // Handle video
+  //         if (chapter.video) oldFileToDelete = chapter.video;
+
+  //         try {
+  //           uploadedFileUrl = await this.cloudinaryService.uploadVideo(file);
+  //         } catch (error) {
+  //           throw new BadRequestException(`Video upload failed: ${error.message}`);
+  //         }
+
+  //         await manager.update(Chapters, id, { video: uploadedFileUrl });
+
+  //         if (oldFileToDelete) {
+  //           try {
+  //             await this.deleteVideo(oldFileToDelete);
+  //           } catch (error) {
+  //             console.warn('Failed to delete old video:', error);
+  //           }
+  //         }
+  //       }
+
+  //       if (isDoc) {
+  //         // Handle PDF/DOC/DOCX
+  //         if (chapter.video) oldFileToDelete = chapter.video;
+
+  //         try {
+  //           uploadedFileUrl = await this.cloudinaryService.uploadFile(file); // use normal upload
+  //         } catch (error) {
+  //           throw new BadRequestException(`Document upload failed: ${error.message}`);
+  //         }
+
+  //         await manager.update(Chapters, id, { video: uploadedFileUrl });
+
+  //         if (oldFileToDelete) {
+  //           try {
+  //             await this.deleteFile(oldFileToDelete);
+  //           } catch (error) {
+  //             console.warn('Failed to delete old document:', error);
+  //           }
+  //         }
+  //       }
+
+  //       const updatedChapter = await manager.findOne(Chapters, { where: { id } });
+
+  //       return { 
+  //         message: `${isVideo ? "Video" : "Document"} uploaded successfully`, 
+  //         chapter: updatedChapter 
+  //       };
+  //     } catch (error) {
+  //       throw error;
+  //     }
+  //   });
+  // }
 
   async publishChapter(id: string) {
     return await this.dataSource.transaction(async manager => {

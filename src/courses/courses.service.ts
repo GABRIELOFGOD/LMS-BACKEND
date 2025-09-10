@@ -209,6 +209,23 @@ export class CoursesService {
       await queryRunner.release();
     }
   }
+
+  async GetUserCourses(userId: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ["enrollments"]
+      });
+      if (!user) return new NotFoundException("User auth failed, please login and try again");
+
+      const enrolledCourses = user.enrollments;
+      const completedCourses = [];
+
+      return { enrolledCourses, completedCourses }
+    } catch (error) {
+      throw error;
+    }
+  }
   
 
   // async addCategory(id: string, updateCourseDto: UpdateCourseCategoryDto) {
@@ -318,10 +335,33 @@ export class CoursesService {
       });
 
       if (!course) throw new NotFoundException("Course not found, please refresh");
+      if (course.isDeleted) throw new BadRequestException("This course is deleted");
 
-      await this.courseRepository.delete(course.id);
+      // Unpublic course
+      course.publish = false;
+
+      // Change course delete status
+      course.isDeleted = true;
+      await this.courseRepository.save(course);
 
       return { message: "Course deleted successfully" }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async restore(id: string) {
+    try {
+      const course = await this.courseRepository.findOne({
+        where: { id }
+      });
+
+      if (!course) throw new NotFoundException("Course not found, please refresh");
+
+      course.isDeleted = false;
+      await this.courseRepository.save(course);
+
+      return { message: "Course restored successfully" }
     } catch (error) {
       throw error;
     }
