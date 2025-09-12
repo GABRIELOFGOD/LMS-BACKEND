@@ -61,7 +61,7 @@ export class CloudinaryService {
       file.path,
       { 
         folder: "lms/videos",
-        resource_type: "video",
+        // resource_type: "video",
         chunk_size: 10000000, // 10MB chunks for large files
         eager: [
           { 
