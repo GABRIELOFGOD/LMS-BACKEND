@@ -17,6 +17,7 @@ import { CourseProgress } from './courses/entities/courseProgress.entity';
 import { CertificateModule } from './certificate/certificate.module';
 import { Certificate } from './certificate/entities/certificate.entity';
 import { Enrollment } from './courses/entities/enrollments.entity';
+import { ChapterProgress } from './courses/entities/chapter.entity';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { Enrollment } from './courses/entities/enrollments.entity';
         username: configService.get<string>('DATABASE_USER'),
         password: configService.get<string>('DATABASE_PASSWORD'),
         database: configService.get<string>('DATABASE_NAME'),
-        entities: [Course, Chapters, Attachment, User, CourseProgress, Certificate, Enrollment],
+        entities: [Course, Chapters, Attachment, User, CourseProgress, Certificate, Enrollment, ChapterProgress, Chapters],
         synchronize: false, // ⚠️ Set to false in production!
       }),
 

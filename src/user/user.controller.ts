@@ -85,4 +85,15 @@ export class UserController {
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  @Patch("/complete/chapter/:courseId/:chapterId")
+  completeChapter(
+    @Request() req,
+    @Param("courseId") courseId: string,
+    @Param("chapterId") chapterId: string,
+  ) {
+    return this.userService.completeChapter(req.user.id, courseId, chapterId);
+  }
 }

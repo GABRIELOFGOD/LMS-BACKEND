@@ -15,10 +15,12 @@ import { EmailService } from 'src/email/email.service';
 import { Enrollment } from 'src/courses/entities/enrollments.entity';
 import { Attachment } from 'src/courses/entities/attachment.entity';
 import { Course } from 'src/courses/entities/course.entity';
+import { Chapters } from 'src/chapters/entities/chapter.entity';
+import { ChapterProgress } from 'src/courses/entities/chapter.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment, Course, Attachment]),
+    TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment, Course, Attachment, ChapterProgress, Chapters]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig)
   ],

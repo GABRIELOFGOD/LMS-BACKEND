@@ -12,12 +12,14 @@ import { OtpDto } from './dto/otp.dto';
 import { UserRole } from 'src/types/user';
 import { CourseProgress } from 'src/courses/entities/courseProgress.entity';
 // import { Course } from 'src/courses/entities/course.entity';
-import { Certificate } from 'src/certificate/entities/certificate.entity';
+import { Certificate, CertificateStatus } from 'src/certificate/entities/certificate.entity';
 import { EmailService } from 'src/email/email.service';
 import { Course } from 'src/courses/entities/course.entity';
 import { Enrollment } from 'src/courses/entities/enrollments.entity';
 import { Attachment } from 'src/courses/entities/attachment.entity';
 import { startOfMonth, subMonths, isAfter, isBefore } from 'date-fns';
+import { ChapterProgress } from 'src/courses/entities/chapter.entity';
+import { Chapters } from 'src/chapters/entities/chapter.entity';
 
 @Injectable()
 export class UserService {
@@ -41,6 +43,18 @@ export class UserService {
     private readonly attachmentRepository: Repository<Attachment>,
 
     private readonly emailService: EmailService,
+
+    @InjectRepository(ChapterProgress)
+    private chapterProgressRepo: Repository<ChapterProgress>,
+
+    @InjectRepository(CourseProgress)
+    private courseProgressRepo: Repository<CourseProgress>,
+
+    @InjectRepository(Chapters)
+    private chapterRepo: Repository<Chapters>,
+
+    @InjectRepository(Certificate)
+    private certificateRepo: Repository<Certificate>
   ) {}
 
   async registrationOTP(email: string) {
@@ -344,5 +358,75 @@ export class UserService {
       message: `User with id ${id} removed successfully`,
       success: true,
     };
+  }
+
+
+  async completeChapter(userId: string, courseId: string, chapterId: string) {
+    const course = await this.courseRepository.findOne({ 
+      where: { id: courseId }, 
+      relations: ["chapters"] 
+    });
+    if (!course) throw new NotFoundException("Course not found");
+
+    const chapter = await this.chapterRepo.findOne({ where: { id: chapterId, course: { id: courseId } } });
+    if (!chapter) throw new NotFoundException("Chapter not found in this course");
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException("User not found");
+
+    // ✅ Save/update chapter progress
+    let chapterProgress = await this.chapterProgressRepo.findOne({
+      where: { user: { id: userId }, course: { id: courseId }, chapter: { id: chapterId } },
+    });
+
+    if (!chapterProgress) {
+      chapterProgress = this.chapterProgressRepo.create({
+        user, course, chapter, completed: true,
+      });
+    } else {
+      chapterProgress.completed = true;
+    }
+    await this.chapterProgressRepo.save(chapterProgress);
+
+    // ✅ Recalculate course progress
+    const publishedChapters = course.chapters.filter(c => c.isPublished).length;
+    const completedChapters = await this.chapterProgressRepo.count({
+      where: { user: { id: userId }, course: { id: courseId }, completed: true },
+    });
+
+    const progress = publishedChapters > 0 ? (completedChapters / publishedChapters) * 100 : 0;
+
+    let courseProgress = await this.courseProgressRepo.findOne({
+      where: { user: { id: userId }, course: { id: courseId } },
+    });
+
+    if (!courseProgress) {
+      courseProgress = this.courseProgressRepo.create({ user, course, progress, completed: progress === 100 });
+    } else {
+      courseProgress.progress = progress;
+      courseProgress.completed = progress === 100;
+    }
+
+    await this.courseProgressRepo.save(courseProgress);
+
+    // ✅ Issue certificate if course is complete
+    if (courseProgress.completed) {
+      let certificate = await this.certificateRepo.findOne({
+        where: { user: { id: userId }, course: { id: courseId } },
+      });
+
+      if (!certificate) {
+        certificate = this.certificateRepo.create({
+          user,
+          course,
+          status: CertificateStatus.ISSUED,
+          issuedAt: new Date(),
+          serialNumber: `CERT-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        });
+        await this.certificateRepo.save(certificate);
+      }
+    }
+
+    return courseProgress;
   }
 }

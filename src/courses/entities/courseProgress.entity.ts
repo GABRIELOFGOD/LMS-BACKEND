@@ -1,5 +1,5 @@
 import { User } from "src/user/entities/user.entity";
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Course } from "./course.entity";
 
 @Entity("course_progress")
@@ -7,18 +7,19 @@ export class CourseProgress {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @OneToOne(() => Course)
+  @ManyToOne(() => Course, (course) => course.enrollments)
   @JoinColumn({ name: "course_id" })
   course: Course;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.enrollments)
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
+  // percentage (0-100) or ratio (0-1)
+  @Column({ type: "float", default: 0 })
   progress: number;
 
-  @Column()
+  @Column({ default: false })
   completed: boolean;
 
   @CreateDateColumn({ type: "timestamp" })

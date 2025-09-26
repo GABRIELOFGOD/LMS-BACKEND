@@ -9,9 +9,11 @@ import { EmailService } from 'src/email/email.service';
 import { Enrollment } from 'src/courses/entities/enrollments.entity';
 import { Course } from 'src/courses/entities/course.entity';
 import { Attachment } from 'src/courses/entities/attachment.entity';
+import { ChapterProgress } from 'src/courses/entities/chapter.entity';
+import { Chapters } from 'src/chapters/entities/chapter.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment, Course, Attachment])],
+  imports: [TypeOrmModule.forFeature([User, CourseProgress, Certificate, Enrollment, Course, Attachment, ChapterProgress, Chapters, CourseProgress])],
   controllers: [UserController],
   providers: [UserService, EmailService],
 })
