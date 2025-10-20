@@ -184,7 +184,7 @@ export class UserService {
 
       const coursesEnrolledFor = await this.enrollRepository.find({
         where: { student: { id } },
-        relations: ['student', 'course'],
+        relations: ['student', 'course', "course.chapters"],
       });
 
       contents.coursesEnrolled = coursesEnrolledFor.map((enr) => enr.course);

@@ -96,4 +96,9 @@ export class UserController {
   ) {
     return this.userService.completeChapter(req.user.id, courseId, chapterId);
   }
+
+  // @UseAuthGuards(JwtAuthGuard)
+  // @HttpCode(HttpStatus.OK)
+  // @Get("/complete/chapter/:courseId/:chapterId")
+  // getCompletedChapter
 }
