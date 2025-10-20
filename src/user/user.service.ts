@@ -155,7 +155,10 @@ export class UserService {
         progress: CourseProgress[];
         certificates: Certificate[];
         coursesCompleted: Course[];
-        coursesEnrolled: Course[];
+        coursesEnrolled: {
+          course: Course;
+          comppletedChapters: ChapterProgress[];
+        }[];
         currentStraek: number;
         longestStreak: number;
       } = {
@@ -187,7 +190,23 @@ export class UserService {
         relations: ['student', 'course', "course.chapters"],
       });
 
-      contents.coursesEnrolled = coursesEnrolledFor.map((enr) => enr.course);
+      contents.coursesEnrolled = await Promise.all(
+      coursesEnrolledFor.map(async (enr) => {
+        const completedChapters = await this.chapterProgressRepo.find({
+          where: {
+            user: { id },                   // progress for this user
+            course: { id: enr.course.id }, // within this course
+            completed: true,               // only completed ones
+          },
+          relations: ['chapter'],
+        });
+
+        return {
+          course: enr.course,
+          comppletedChapters: completedChapters,
+        };
+      })
+    );
 
       return contents;
     } catch (error) {
