@@ -6,12 +6,14 @@ import {
   HttpStatus,
   Request,
   Body,
+  Param,
   // Body,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth/local-auth.guard';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { CreateUserDto, ForgotPasswordDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
+import { SetPasswordDto } from './dto/register.dto';
 // import { ResgistrationDto } from './dto/register.dto';
 
 @Controller('auth')
@@ -36,5 +38,17 @@ export class AuthController {
   @Post('register')
   async create(@Body() registrationDto: CreateUserDto) {
     return this.userService.create(registrationDto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post("forgot-password")
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto){
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post("set-password/:token")
+  async setPassword(@Body() setPasswordDto: SetPasswordDto, @Param("token") token: string){
+    return this.authService.setPassword(setPasswordDto, token);
   }
 }

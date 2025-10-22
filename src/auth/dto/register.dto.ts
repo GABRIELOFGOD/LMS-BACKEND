@@ -13,3 +13,11 @@ export class ResgistrationDto {
   @IsNotEmpty()
   password: string;
 }
+
+export class SetPasswordDto {
+  @IsNotEmpty()
+  @IsString()
+  password: string;
+
+
+}

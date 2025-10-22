@@ -21,3 +21,22 @@ export const otpHtml = (otp: string) => `
   </body>
 </html>
 `
+
+export const ForgotPasswordMail = (link: string, name: string) => `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Forgot Password</title>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Forgot password</h2>
+      <p>Hello ${name} please click on the button below or follow the link to setup a new password</p>
+      <button style="padding: 10px 30px; background: 'orange'; color: 'white'"><a href=${link}>Reset password</a></button>
+      <p>This link will expire in 10 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
+    </div>
+  </body>
+</html>
+`

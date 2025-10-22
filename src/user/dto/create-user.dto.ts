@@ -30,3 +30,9 @@ export class CreateUserDto {
   address?: string;
 
 }
+
+export class ForgotPasswordDto {
+  @IsString()
+  @IsEmail()
+  email: string;
+}

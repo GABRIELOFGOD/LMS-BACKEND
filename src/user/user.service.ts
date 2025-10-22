@@ -113,6 +113,7 @@ export class UserService {
         updatedAt,
         otp,
         otpExpires,
+        hashPassword,
         ...userWithoutPassword
       } = savedUser;
       return {
